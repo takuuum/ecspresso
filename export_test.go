@@ -34,6 +34,11 @@ var (
 	WrapPermissionError    = wrapPermissionError
 	ParseIAMPolicyDocument = parseIAMPolicyDocument
 	ParseSections          = parseSections
+	DiffJobDefs            = diffJobDefs
+	SortJobDefinition      = sortJobDefinition
+	JobDefinitionToInput   = jobDefinitionToInput
+	ParseTagsMap           = parseTagsMap
+	BatchLogGroupOf        = batchLogGroupOf
 	ReadmeContent          = readmeContent
 )
 

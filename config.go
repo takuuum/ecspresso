@@ -58,6 +58,8 @@ type Config struct {
 	ServiceDefinitionPath string            `yaml:"service_definition,omitempty" json:"service_definition,omitempty"`
 	TaskDefinitionPath    string            `yaml:"task_definition,omitempty" json:"task_definition,omitempty"`
 	ExpressDefinitionPath string            `yaml:"express_definition,omitempty" json:"express_definition,omitempty"`
+	JobDefinitionPath     string            `yaml:"job_definition,omitempty" json:"job_definition,omitempty"`
+	JobQueue              string            `yaml:"job_queue,omitempty" json:"job_queue,omitempty"`
 	Plugins               []ConfigPlugin    `yaml:"plugins,omitempty" json:"plugins,omitempty"`
 	AppSpec               *appspec.AppSpec  `yaml:"appspec,omitempty" json:"appspec,omitempty"`
 	FilterCommand         string            `yaml:"filter_command,omitempty" json:"filter_command,omitempty"`
@@ -164,6 +166,14 @@ func (c *Config) Restrict(ctx context.Context) error {
 	if c.ExpressDefinitionPath != "" && !filepath.IsAbs(c.ExpressDefinitionPath) {
 		c.ExpressDefinitionPath = filepath.Join(c.dir, c.ExpressDefinitionPath)
 	}
+	if c.JobDefinitionPath != "" && !filepath.IsAbs(c.JobDefinitionPath) {
+		c.JobDefinitionPath = filepath.Join(c.dir, c.JobDefinitionPath)
+	}
+	if c.isBatchMode() {
+		if c.TaskDefinitionPath != "" || c.ServiceDefinitionPath != "" || c.ExpressDefinitionPath != "" {
+			return fmt.Errorf("job_definition can not be used with task_definition, service_definition or express_definition")
+		}
+	}
 	if c.RequiredVersion != "" {
 		constraints, err := goVersion.NewConstraint(c.RequiredVersion)
 		if err != nil {
@@ -246,6 +256,12 @@ func (c *Config) ValidateVersion(version string) error {
 
 func (c *Config) isExpressMode() bool {
 	return c.ExpressDefinitionPath != ""
+}
+
+// isBatchMode reports whether the configuration targets AWS Batch
+// instead of ECS. Batch mode is enabled by defining job_definition.
+func (c *Config) isBatchMode() bool {
+	return c.JobDefinitionPath != ""
 }
 
 // NewDefaultConfig creates a default configuration.

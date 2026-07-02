@@ -51,6 +51,7 @@ Commands are defined as option structs in their respective files:
 - `diff.go` - Show differences between local and remote definitions
 - `verify.go` - Validate configurations and AWS resources
 - `init.go` - Generate config from existing ECS service
+- `batch*.go` - AWS Batch mode. When `job_definition` is defined in the config, commands are dispatched to `Batch*` handlers (see `dispatchBatch` in `batch.go`) that manage Batch job definitions and jobs instead of ECS services
 
 ### Template System
 

@@ -147,6 +147,9 @@ func dispatchApp(ctx context.Context, sub string, usage func(), opts *CLIOptions
 		return err
 	}
 	app.LogDebug("dispatching subcommand: %s", sub)
+	if app.config.isBatchMode() {
+		return dispatchBatch(ctx, sub, app, opts)
+	}
 	switch sub {
 	case "deploy":
 		return app.Deploy(ctx, *opts.Deploy)

@@ -1,0 +1,46 @@
+{
+  "jobDefinitionName": "test",
+  "type": "container",
+  "parameters": {
+    "inputFile": "default.txt"
+  },
+  "tags": {
+    "env": "test"
+  },
+  "containerProperties": {
+    "image": "busybox:latest",
+    "command": [
+      "echo",
+      "Ref::inputFile"
+    ],
+    "resourceRequirements": [
+      {
+        "type": "VCPU",
+        "value": "0.25"
+      },
+      {
+        "type": "MEMORY",
+        "value": "512"
+      }
+    ],
+    "environment": [
+      {
+        "name": "FOO",
+        "value": "{{ env `FOO` `bar` }}"
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "/custom/group"
+      }
+    }
+  },
+  "platformCapabilities": [
+    "FARGATE"
+  ],
+  "propagateTags": true,
+  "timeout": {
+    "attemptDurationSeconds": 300
+  }
+}

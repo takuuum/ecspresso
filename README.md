@@ -25,6 +25,7 @@ ecspresso also supports ECS Express mode for simplified deployments and provides
 - [Scale out/in](#scale-outin)
 - [Rollback](#rollback)
 - [Run task](#example-of-run-task)
+- [AWS Batch support](#aws-batch-support)
 - [Notes](#notes)
   - [Version constraint](#version-constraint)
   - [Manage Application Auto Scaling](#manage-application-auto-scaling)
@@ -642,6 +643,40 @@ $ ecspresso run --config ecspresso.yml --task-def=db-migrate.json
 If `--task-def` is not set, ecspresso will use the task definition included in the service.
 
 Other options for RunTask API are set by service attributes (CapacityProviderStrategy, LaunchType, PlacementConstraints, PlacementStrategy and PlatformVersion).
+
+## AWS Batch support
+
+This fork of ecspresso supports deploying AWS Batch job definitions as well as ECS services.
+
+When `job_definition` is defined in the configuration file, ecspresso runs in "batch mode". `task_definition`, `service_definition` and `express_definition` can not be used together with `job_definition`.
+
+```yaml
+region: ap-northeast-1
+job_definition: job-def.json
+job_queue: my-job-queue # required by run and status
+```
+
+job-def.json is a JSON (or Jsonnet) file of the [RegisterJobDefinition](https://docs.aws.amazon.com/batch/latest/APIReference/API_RegisterJobDefinition.html) API parameters, and supports the same template syntax and plugins as task definitions. An object wrapped in a `jobDefinition` key (as returned by `aws batch describe-job-definitions`) is also accepted.
+
+In batch mode, the following commands work against AWS Batch.
+
+- `init --job-definition {name|name:revision|ARN}` creates configuration files from an existing job definition. `--job-queue` writes the job queue name into the configuration file.
+- `deploy` registers a new revision of the job definition. AWS Batch runs jobs submitted without an explicit revision on the latest ACTIVE revision, so registering a new revision completes the deployment.
+- `rollback` deregisters the latest ACTIVE revision, so that the previous ACTIVE revision becomes effective.
+- `run` submits a job to `job_queue` and waits until the job finishes, tailing the job's CloudWatch Logs. `--overrides` accepts a Batch [ContainerOverrides](https://docs.aws.amazon.com/batch/latest/APIReference/API_ContainerOverrides.html) JSON. `--count` of 2 or more submits an array job. `--skip-task-definition`, `--latest-task-definition` and `--revision` choose an existing revision instead of registering a new one.
+- `register` registers a new revision of the job definition.
+- `deregister` deregisters revisions by `--revision {number|latest}` or `--keeps N` (keeps the newest N ACTIVE revisions).
+- `revisions` shows revisions of the job definition with their status (ACTIVE/INACTIVE).
+- `diff` shows differences between the local job definition and the latest ACTIVE revision.
+- `render config|job-definition|jobdef` renders the configuration file or the job definition.
+- `status` shows the job definition, the job queue, and recent jobs on the queue.
+
+```console
+$ ecspresso deploy --config ecspresso.yml
+$ ecspresso run --config ecspresso.yml --overrides '{"command":["ls","-la"]}'
+```
+
+The other commands (e.g. `scale`, `refresh`, `exec`, `tasks`, `verify`, `wait`, `delete`, `appspec`) are not supported in batch mode.
 
 ## Notes
 

@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/applicationautoscaling"
 	aasTypes "github.com/aws/aws-sdk-go-v2/service/applicationautoscaling/types"
+	"github.com/aws/aws-sdk-go-v2/service/batch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	cwlTypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/aws/aws-sdk-go-v2/service/codedeploy"
@@ -172,6 +173,7 @@ type App struct {
 	Cluster string
 
 	ecs         *ecs.Client
+	batch       *batch.Client
 	autoScaling *applicationautoscaling.Client
 	codedeploy  *codedeploy.Client
 	cwl         *cloudwatchlogs.Client
@@ -246,6 +248,7 @@ func New(ctx context.Context, opt *CLIOptions, newAppOptions ...AppOption) (*App
 		Cluster: conf.Cluster,
 
 		ecs:         ecs.NewFromConfig(conf.awsv2Config),
+		batch:       batch.NewFromConfig(conf.awsv2Config),
 		autoScaling: applicationautoscaling.NewFromConfig(conf.awsv2Config),
 		codedeploy:  codedeploy.NewFromConfig(conf.awsv2Config),
 		cwl:         cloudwatchlogs.NewFromConfig(conf.awsv2Config),
@@ -596,6 +599,12 @@ func (d *App) findLatestTaskDefinitionArn(ctx context.Context, family string) (s
 }
 
 func (d *App) Name() string {
+	if d.config != nil && d.config.isBatchMode() {
+		if d.config.JobQueue != "" {
+			return "batch:" + d.config.JobQueue
+		}
+		return "batch"
+	}
 	return fmt.Sprintf("%s/%s", d.Service, d.Cluster)
 }
 

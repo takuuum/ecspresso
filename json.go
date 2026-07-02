@@ -93,7 +93,8 @@ func walkMap(m map[string]any, fn func(string) string) {
 		switch value := value.(type) {
 		case map[string]any:
 			switch strings.ToLower(key) {
-			case "dockerlabels", "options":
+			case "dockerlabels", "options", "parameters", "tags",
+				"labels", "annotations", "nodeselector", "limits", "requests":
 				walkMap(value, nil) // do not rewrite keys for map[string]string
 			default:
 				walkMap(value, fn)
