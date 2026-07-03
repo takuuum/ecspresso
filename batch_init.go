@@ -61,6 +61,7 @@ func (d *App) BatchInit(ctx context.Context, opt InitOption) error {
 
 	// write configuration file
 	d.LogInfo("initializing configuration file", "path", conf.path)
+	conf.Cluster = "" // not used in batch mode
 	conf.Service = ""
 	conf.TaskDefinitionPath = ""
 	conf.ServiceDefinitionPath = ""

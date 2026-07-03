@@ -53,7 +53,7 @@ func newConfigLoader(extStr, extCode map[string]string) *configLoader {
 type Config struct {
 	RequiredVersion       string            `yaml:"required_version,omitempty" json:"required_version,omitempty"`
 	Region                string            `yaml:"region" json:"region"`
-	Cluster               string            `yaml:"cluster" json:"cluster"`
+	Cluster               string            `yaml:"cluster,omitempty" json:"cluster,omitempty"`
 	Service               string            `yaml:"service" json:"service"`
 	ServiceDefinitionPath string            `yaml:"service_definition,omitempty" json:"service_definition,omitempty"`
 	TaskDefinitionPath    string            `yaml:"task_definition,omitempty" json:"task_definition,omitempty"`

@@ -93,6 +93,11 @@ func walkMap(m map[string]any, fn func(string) string) {
 		switch value := value.(type) {
 		case map[string]any:
 			switch strings.ToLower(key) {
+			// keys of these map[string]string values are user data
+			// (ECS: dockerLabels/options/labels, Batch: parameters/tags,
+			// EKS: labels/annotations/nodeSelector/limits/requests) and
+			// must be passed through as-is. ECS "tags" is an array (not
+			// a map) so it never reaches this branch.
 			case "dockerlabels", "options", "parameters", "tags",
 				"labels", "annotations", "nodeselector", "limits", "requests":
 				walkMap(value, nil) // do not rewrite keys for map[string]string

@@ -37,7 +37,7 @@ func dispatchBatch(ctx context.Context, sub string, app *App, opts *CLIOptions) 
 	case "init":
 		return app.BatchInit(ctx, *opts.Init)
 	case "diff":
-		return app.BatchDiff(ctx, *opts.Diff)
+		return app.Diff(ctx, *opts.Diff)
 	case "render":
 		return app.Render(ctx, *opts.Render)
 	default:

@@ -71,6 +71,11 @@ func (d *App) diff(ctx context.Context, opt DiffOption) (bool, error) {
 		return d.diffExpress(ctx, opt)
 	}
 
+	// batch job definition
+	if d.config.isBatchMode() {
+		return d.diffBatch(ctx, opt)
+	}
+
 	var (
 		remoteTaskDefArn string
 		svChanged        bool

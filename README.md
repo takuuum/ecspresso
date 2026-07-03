@@ -663,13 +663,13 @@ In batch mode, the following commands work against AWS Batch.
 - `init --job-definition {name|name:revision|ARN}` creates configuration files from an existing job definition. `--job-queue` writes the job queue name into the configuration file.
 - `deploy` registers a new revision of the job definition. AWS Batch runs jobs submitted without an explicit revision on the latest ACTIVE revision, so registering a new revision completes the deployment.
 - `rollback` deregisters the latest ACTIVE revision, so that the previous ACTIVE revision becomes effective.
-- `run` submits a job to `job_queue` and waits until the job finishes, tailing the job's CloudWatch Logs. `--overrides` accepts a Batch [ContainerOverrides](https://docs.aws.amazon.com/batch/latest/APIReference/API_ContainerOverrides.html) JSON. `--count` of 2 or more submits an array job. `--skip-task-definition`, `--latest-task-definition` and `--revision` choose an existing revision instead of registering a new one.
+- `run` submits a job to `job_queue` and waits until the job finishes, tailing the job's CloudWatch Logs (log tailing works for `containerProperties`-based job definitions; for array jobs and ECS/EKS/multi-node properties the command waits without logs). `--overrides` accepts a Batch [ContainerOverrides](https://docs.aws.amazon.com/batch/latest/APIReference/API_ContainerOverrides.html) JSON. `--count` of 2 or more submits an array job. `--skip-task-definition`, `--latest-task-definition` and `--revision` choose an existing revision instead of registering a new one. `--propagate-tags TASK_DEFINITION` propagates the job definition tags to the ECS task (`SERVICE` is not supported).
 - `register` registers a new revision of the job definition.
 - `deregister` deregisters revisions by `--revision {number|latest}` or `--keeps N` (keeps the newest N ACTIVE revisions).
 - `revisions` shows revisions of the job definition with their status (ACTIVE/INACTIVE).
 - `diff` shows differences between the local job definition and the latest ACTIVE revision.
 - `render config|job-definition|jobdef` renders the configuration file or the job definition.
-- `status` shows the job definition, the job queue, and recent jobs on the queue.
+- `status` shows the job definition, the job queue, and recent jobs on the queue (up to `--events` jobs per job status).
 
 ```console
 $ ecspresso deploy --config ecspresso.yml

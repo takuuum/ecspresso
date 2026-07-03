@@ -89,3 +89,39 @@ func TestUnmarshalJSON(t *testing.T) {
 		})
 	}
 }
+
+type testUserDataMaps struct {
+	Parameters map[string]string
+	Tags       map[string]string
+	Volume     struct {
+		Labels map[string]string
+	}
+}
+
+// keys of user-data maps (parameters, tags, labels, ...) must not be
+// case-rewritten in either direction.
+func TestJSONUserDataMapKeys(t *testing.T) {
+	v := testUserDataMaps{
+		Parameters: map[string]string{"inputFile": "default.txt"},
+		Tags:       map[string]string{"CostCenter": "x"},
+	}
+	v.Volume.Labels = map[string]string{"com.example.Label": "y"}
+
+	b, err := ecspresso.MarshalJSONForAPI(v)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, key := range []string{`"inputFile"`, `"CostCenter"`, `"com.example.Label"`} {
+		if !bytes.Contains(b, []byte(key)) {
+			t.Errorf("map key is rewritten on marshal: %s not found in %s", key, string(b))
+		}
+	}
+
+	var restored testUserDataMaps
+	if err := ecspresso.UnmarshalJSONForStruct(b, &restored, "test.json"); err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff(v, restored); diff != "" {
+		t.Errorf("mismatch (-want +got):\n%s", diff)
+	}
+}

@@ -67,8 +67,13 @@ func (d *App) BatchRun(ctx context.Context, opt RunOption) error {
 		ContainerOverrides: &ov,
 		Tags:               tags,
 	}
-	if opt.PropagateTags != "" && opt.PropagateTags != "NONE" {
+	switch opt.PropagateTags {
+	case "", "NONE":
+	case "TASK_DEFINITION":
 		in.PropagateTags = aws.Bool(true)
+	default:
+		// SERVICE has no equivalent in batch mode
+		return fmt.Errorf("--propagate-tags %s is not supported in batch mode", opt.PropagateTags)
 	}
 	if opt.Count > 1 {
 		// two or more jobs are submitted as an array job
@@ -86,7 +91,16 @@ func (d *App) BatchRun(ctx context.Context, opt RunOption) error {
 		d.LogInfo("Run job invoked")
 		return nil
 	}
-	if err := d.WaitJob(ctx, aws.ToString(out.JobId), batchLogGroupOf(jd), time.Now(), opt.waitUntilRunning()); err != nil {
+	logGroup := batchLogGroupOf(jd)
+	if opt.Count > 1 {
+		// each child job of an array job writes to its own log stream,
+		// which the parent job does not expose
+		logGroup = ""
+	}
+	if logGroup == "" {
+		d.LogInfo("log tailing is not available for this job, waiting without logs")
+	}
+	if err := d.WaitJob(ctx, aws.ToString(out.JobId), logGroup, time.Now(), opt.waitUntilRunning()); err != nil {
 		return err
 	}
 	d.LogInfo("Run job completed!")
@@ -196,7 +210,9 @@ func (d *App) WaitJob(ctx context.Context, jobID string, logGroup string, starte
 			if err != nil {
 				if errors.As(err, &errPermissionDenied) {
 					d.LogWarn("failed to get log events: check logs:GetLogEvents permission", "error", err.Error())
-					logStream = "" // stop tailing
+					// clear logGroup too, or the discovery branch
+					// re-sets logStream on the next poll
+					logGroup, logStream = "", ""
 				} else if !errors.As(err, &errNotFound) {
 					d.LogWarn("failed to get log events", "error", err.Error())
 				}

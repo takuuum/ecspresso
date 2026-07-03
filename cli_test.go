@@ -752,6 +752,23 @@ var cliTests = []struct {
 		},
 	},
 	{
+		args: []string{"init", "--job-definition=myjob", "--job-queue", "myqueue", "--config", "myconfig.yml"},
+		sub:  "init",
+		subOption: &ecspresso.InitOption{
+			Region:                os.Getenv("AWS_REGION"),
+			Cluster:               "default",
+			Service:               "",
+			JobDefinition:         "myjob",
+			TaskDefinitionPath:    "ecs-task-def.json",
+			ServiceDefinitionPath: "ecs-service-def.json",
+			ExpressDefinitionPath: "ecs-express-def.json",
+			JobDefinitionPath:     "batch-job-def.json",
+			JobQueue:              "myqueue",
+			ForceOverwrite:        false,
+			Jsonnet:               false,
+		},
+	},
+	{
 		args: []string{"init", "--service", "myservice", "--no-express", "--jsonnet", "--express-definition-path", "express.jsonnet"},
 		sub:  "init",
 		subOption: &ecspresso.InitOption{

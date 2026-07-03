@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"sort"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -15,18 +14,13 @@ import (
 	"github.com/kylelemons/godebug/diff"
 )
 
-// BatchDiff shows the diff between the local job definition and the
-// latest ACTIVE revision registered in AWS Batch.
-func (d *App) BatchDiff(ctx context.Context, opt DiffOption) error {
-	ctx, cancel := d.Start(ctx)
-	defer cancel()
-	if opt.w == nil {
-		opt.w = os.Stdout
-	}
-
+// diffBatch shows the diff between the local job definition and the
+// latest ACTIVE revision registered in AWS Batch. It is called from
+// the shared diff() (via Diff / HasDiff) when running in batch mode.
+func (d *App) diffBatch(ctx context.Context, opt DiffOption) (bool, error) {
 	newJd, err := d.LoadJobDefinition(d.config.JobDefinitionPath)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	var remoteJd *JobDefinitionInput
@@ -36,7 +30,7 @@ func (d *App) BatchDiff(ctx context.Context, opt DiffOption) error {
 		if errors.As(err, &errNotFound) {
 			d.LogInfo("job definition not found, will register a new job definition")
 		} else {
-			return err
+			return false, err
 		}
 	} else {
 		remoteArn = aws.ToString(latest.JobDefinitionArn)
@@ -44,8 +38,7 @@ func (d *App) BatchDiff(ctx context.Context, opt DiffOption) error {
 		remoteJd = jobDefinitionToInput(latest)
 	}
 
-	_, err = diffJobDefs(ctx, newJd, remoteJd, d.config.JobDefinitionPath, remoteArn, &opt)
-	return err
+	return diffJobDefs(ctx, newJd, remoteJd, d.config.JobDefinitionPath, remoteArn, &opt)
 }
 
 func diffJobDefs(ctx context.Context, local, remote *JobDefinitionInput, localPath, remoteArn string, opt *DiffOption) (bool, error) {
