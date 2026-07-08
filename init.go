@@ -22,9 +22,12 @@ type InitOption struct {
 	Cluster               string `help:"ECS cluster name" default:"default"`
 	Service               string `help:"ECS service name" required:"" xor:"FROM"`
 	TaskDefinition        string `help:"ECS task definition name:revision" required:"" xor:"FROM"`
+	JobDefinition         string `help:"Batch job definition name or name:revision (Batch mode)" required:"" xor:"FROM"`
 	TaskDefinitionPath    string `help:"path to output task definition file" default:"ecs-task-def.json"`
 	ServiceDefinitionPath string `help:"path to output service definition file" default:"ecs-service-def.json"`
 	ExpressDefinitionPath string `help:"path to output express service definition file" default:"ecs-express-def.json"`
+	JobDefinitionPath     string `help:"path to output job definition file (Batch mode)" default:"batch-job-def.json"`
+	JobQueue              string `help:"Batch job queue name to write into the config (Batch mode)" default:""`
 	Sort                  bool   `help:"sort elements in task definition" default:"false" negatable:""`
 	ForceOverwrite        bool   `help:"overwrite existing files" default:"false"`
 	Jsonnet               bool   `help:"output files as jsonnet format" default:"false"`
@@ -36,6 +39,14 @@ func (opt *InitOption) NewConfig(ctx context.Context, configFilePath string) (*C
 	conf.path = configFilePath
 	conf.Region = opt.Region
 	conf.Cluster = opt.Cluster
+	if opt.JobDefinition != "" {
+		conf.JobDefinitionPath = opt.JobDefinitionPath
+		conf.JobQueue = opt.JobQueue
+		if err := conf.Restrict(ctx); err != nil {
+			return nil, err
+		}
+		return conf, nil
+	}
 	conf.Service = opt.Service
 	conf.TaskDefinitionPath = opt.TaskDefinitionPath
 	conf.ServiceDefinitionPath = opt.ServiceDefinitionPath

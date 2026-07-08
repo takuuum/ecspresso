@@ -1,0 +1,10 @@
+{
+  "jobDefinition": {
+    "jobDefinitionName": "wrapped",
+    "type": "container",
+    "containerProperties": {
+      "image": "busybox:latest",
+      "command": ["true"]
+    }
+  }
+}
